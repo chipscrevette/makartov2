@@ -1,0 +1,33 @@
+/* =====================================================================
+   PIED DE PAGE : LES CRÉDITS
+   ---------------------------------------------------------------------
+   Ce fichier met en forme la dernière ligne du site, qui renvoie vers la
+   première version du projet.
+   Utilise : les variables de 01-base.css et l'élément footer.credit de
+   index.html.
+   Fournit : la classe .credit.
+   ===================================================================== */
+
+/* ---------- 1. Le pied de page ---------- */
+
+/* Le pied de page : texte centré, petit et gris, séparé du reste par un
+   trait fin. La marge du bas s'agrandit sur les téléphones qui ont une barre
+   de geste en bas d'écran (safe-area-inset-bottom). */
+.credit {
+  padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+}
+
+/* Le lien : en noir, souligné par un trait rouge de 1 px dessiné avec une
+   ombre intérieure (plus net qu'un soulignement classique). */
+.credit a {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: inset 0 -1px 0 var(--red);
+}

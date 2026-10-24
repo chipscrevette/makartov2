@@ -1,0 +1,138 @@
+/* =====================================================================
+   BASE DU SITE : COULEURS, POLICE ET RÉGLAGES COMMUNS
+   ---------------------------------------------------------------------
+   Ce fichier pose le thème « Négatif » de Markarto : la ville en noir et
+   blanc, la destruction en rouge, une seule police (Geist).
+   Il définit les variables de couleur utilisées partout, puis les règles
+   communes à toute la page : fond, texte, boutons, petites capitales et
+   colonne centrale.
+   Utilise : la police Geist, chargée par index.html depuis Google Fonts.
+   Fournit : les variables --paper, --ink, --red, --glass, --night, --f, --r
+   et les classes .cap, .ch et .wrap, reprises par tous les autres fichiers.
+   ===================================================================== */
+
+/* ---------- 1. Variables de couleur et de forme ---------- */
+
+/* Les variables sont posées sur :root (la balise <html>), donc lisibles partout.
+   --paper      : le fond de page, un blanc cassé légèrement chaud.
+   --ink        : l'encre principale, presque noire (titres, bâti sur la carte).
+   --ink-2      : un gris foncé pour le texte courant.
+   --ink-3      : un gris moyen pour les mentions discrètes (dates, sources).
+   --line       : un trait très léger (noir à 12 % d'opacité) pour les séparations.
+   --water      : le bleu gris de l'eau sur les cartes.
+   --red        : le rouge vif de la destruction et des éléments actifs.
+   --red-soft   : un rose pâle, pour les zones rasées dans la légende.
+   --red-hatch  : un rose presque blanc, fond des hachures des zones endommagées.
+   --glass      : un blanc à 88 % d'opacité, effet « verre » des cartes de texte.
+   --night      : le fond sombre de la partie « Coulisses SIG ».
+   --night-text : le texte clair posé sur ce fond sombre.
+   --f          : la police, Geist, avec des polices système en secours.
+   --r          : l'arrondi des grands blocs (24 px).
+   color-scheme: light indique au navigateur que la page est en thème clair. */
+:root {
+  --paper: #f4f4f1;
+  --ink: #111111;
+  --ink-2: #3b3b40;
+  --ink-3: #7a7a7f;
+  --line: rgba(17, 17, 17, 0.12);
+  --water: #aebbcb;
+  --red: #e5262d;
+  --red-soft: #f7d2d0;
+  --red-hatch: #f7eeec;
+  --glass: rgba(255, 255, 255, 0.88);
+  --night: #111111;
+  --night-text: #f4f4f1;
+  --f: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 24px;
+  color-scheme: light;
+}
+
+/* ---------- 2. Réglages généraux de la page ---------- */
+
+/* Les largeurs indiquées incluent la marge intérieure et la bordure :
+   un bloc de 410 px fait vraiment 410 px. */
+* {
+  box-sizing: border-box;
+}
+
+/* Les liens du menu font glisser la page en douceur jusqu'au chapitre. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Si la personne a demandé moins d'animations dans son système,
+   le saut vers un chapitre se fait d'un coup, sans glissement. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Le corps de la page : fond blanc cassé, texte noir, police Geist en 16 px.
+   L'option -webkit-font-smoothing rend les lettres plus fines sur Mac. */
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f);
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+
+/* Sur les téléphones à encoche, une bande couleur papier couvre la zone
+   tout en haut de l'écran (safe-area-inset-top), au-dessus de tout le reste,
+   pour que le contenu qui défile ne passe pas sous l'heure et la batterie. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 60;
+  background: var(--paper);
+}
+
+/* Les boutons reprennent la police et la couleur du texte autour d'eux. */
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------- 3. Petites capitales et numéros de chapitre ---------- */
+
+/* .cap : petit texte en majuscules espacées (dates, surtitres, crédits). */
+.cap {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* .ch : le numéro de chapitre en chiffres romains (I, II...), en rouge. */
+.cap .ch {
+  color: var(--red);
+  font-weight: 600;
+  margin-right: 0.7em;
+}
+
+/* Dans l'en-tête d'une carte de texte, le chapitre et la date
+   restent chacun sur une seule ligne. */
+.card .top span {
+  white-space: nowrap;
+}
+
+/* Une carte de texte écrite avec <figure> (celles qui ont une photo)
+   perd la marge que le navigateur donne par défaut aux figures. */
+figure.card {
+  margin: 0;
+}
+
+/* ---------- 4. Colonne centrale ---------- */
+
+/* .wrap : colonne de 1180 px au plus, centrée, avec 20 px de marge à gauche
+   et à droite (davantage si l'écran a une encoche sur le côté). */
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}

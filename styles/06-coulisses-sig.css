@@ -1,0 +1,185 @@
+/* =====================================================================
+   COULISSES SIG : LA PILE DE CALQUES EN 3D
+   ---------------------------------------------------------------------
+   Ce fichier met en forme la section « Coulisses SIG », sur fond noir.
+   La carte de Hiroshima y est décomposée en six calques empilés (eau, rues,
+   bâti, zones de 1945, repères, transposition à Rennes) qui s'écartent en
+   3D pendant le défilement. Une étiquette rouge nomme le calque mis en avant.
+   Utilise : les variables de 01-base.css, la section .lab de index.html et
+   les blocs créés par scripts/10-coulisses-sig.js (.layer, .pt, .ltag).
+   Fournit : les classes d'état .base, .dim, .gone, .hot et .on, ainsi que
+   les variables --rx et --rz (angles d'inclinaison), réglées par ce script.
+   ===================================================================== */
+
+/* ---------- 1. La section sur fond noir ---------- */
+
+/* Toute la section passe en fond noir et texte clair. */
+.lab {
+  position: relative;
+  background: var(--night);
+  color: var(--night-text);
+}
+
+/* La scène de cette section centre la pile. perspective: 1700px fixe la
+   distance de l'œil : plus le nombre est petit, plus l'effet 3D est fort. */
+.lab .stage {
+  display: grid;
+  place-items: center;
+  perspective: 1700px;
+}
+
+/* Le titre et le premier paragraphe en clair, les autres paragraphes
+   en clair à 72 % pour rester un peu plus discrets. */
+.lab .prose h2,
+.lab .prose .lead {
+  color: var(--night-text);
+}
+.lab .prose p {
+  color: rgba(244, 244, 241, 0.72);
+}
+
+/* ---------- 2. La pile de calques ---------- */
+
+/* La pile : un carré de 62 % de la hauteur d'écran (560 px au plus),
+   décalé vers la droite (12 % de la largeur) pour laisser la place au texte.
+   Elle est inclinée vers l'arrière (--rx) et tournée sur elle-même (--rz) ;
+   ces deux angles grandissent avec le défilement. preserve-3d garde la
+   profondeur des calques à l'intérieur. */
+.stack {
+  position: relative;
+  width: min(62vh, 560px);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: translateX(12vw) rotateX(var(--rx, 0deg)) rotateZ(var(--rz, 0deg));
+}
+
+/* Un calque : une plaque carrée aux coins arrondis, superposée aux autres.
+   Son opacité, son ombre et son fond changent en fondu (0,6 seconde). */
+.layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  transform-style: preserve-3d;
+  transition:
+    opacity 0.6s,
+    box-shadow 0.6s,
+    background 0.6s;
+}
+
+/* Le canevas dessiné du calque remplit toute la plaque. */
+.layer canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  display: block;
+}
+
+/* Le calque du fond (.base) est opaque, couleur papier. */
+.layer.base {
+  background: var(--paper);
+}
+
+/* Les autres calques sont presque transparents (clair à 6 %),
+   avec un fin liseré clair pour voir leurs bords. */
+.layer:not(.base) {
+  background: rgba(244, 244, 241, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(244, 244, 241, 0.18);
+}
+
+/* États posés par le script : .dim = calque en retrait (14 % d'opacité),
+   .gone = calque caché. */
+.layer.dim {
+  opacity: 0.14;
+}
+.layer.gone {
+  opacity: 0;
+}
+
+/* .hot = le calque mis en avant : fond papier, contour rouge de 2 px
+   et grande lueur rouge en dessous. */
+.layer.hot {
+  background: var(--paper);
+  box-shadow:
+    0 0 0 2px var(--red),
+    0 30px 80px rgba(229, 38, 45, 0.25);
+}
+
+/* .pt : quatre points invisibles aux coins de chaque calque. Le script lit
+   leur position à l'écran pour savoir où placer l'étiquette. */
+.layer .pt {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ---------- 3. Les étiquettes des calques ---------- */
+
+/* Le conteneur des étiquettes : posé à plat sur toute la scène, au-dessus
+   de la pile, sans capter les clics. */
+.ltags {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Une étiquette : invisible au départ. Le script la déplace (transform)
+   jusqu'au coin de son calque ; will-change prévient le navigateur que
+   ce déplacement sera fréquent. */
+.ltag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+
+/* Le petit trait rouge de 28 px qui relie l'étiquette au calque. */
+.ltag::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--red);
+}
+
+/* Le nom du calque dans une pilule rouge, texte blanc. */
+.ltag span {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+}
+
+/* L'étiquette du calque en avant (.on) apparaît en 0,45 seconde,
+   après un délai de 0,3 seconde, le temps que le calque se soulève. */
+.ltag.on {
+  opacity: 1;
+  transition: opacity 0.45s 0.3s;
+}
+
+/* ---------- 4. Les cartes de texte en version sombre ---------- */
+
+/* Dans les Coulisses, la carte de texte devient
+   gris très foncé translucide, avec un texte clair. */
+.lab .card {
+  background: rgba(26, 26, 28, 0.86);
+  color: var(--night-text);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Les paragraphes en clair à 75 %. */
+.lab .card p {
+  color: rgba(244, 244, 241, 0.75);
+}
+
+/* L'en-tête (chapitre et date) en clair à 50 %. */
+.lab .card .top {
+  color: rgba(244, 244, 241, 0.5);
+}

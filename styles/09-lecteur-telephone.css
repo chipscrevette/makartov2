@@ -1,0 +1,809 @@
+/* =====================================================================
+   LECTEUR SUR TÉLÉPHONE : LE RÉCIT ÉCRAN PAR ÉCRAN
+   ---------------------------------------------------------------------
+   Sur téléphone, la page ne défile plus : un lecteur plein écran (#player)
+   montre le récit écran par écran, comme des « stories » Instagram.
+   Ce fichier met en forme ce lecteur : la carte ou la pile de calques en
+   fond, le texte en pleine page ou dans un tiroir en bas, l'en-tête avec
+   ses segments de progression, la légende et la mini-carte, et les
+   animations d'entrée et de sortie du texte.
+   Utilise : les variables de 01-base.css et les éléments créés par
+   scripts/13-lecteur-telephone.js (#player et ses blocs .pv-...).
+   Fournit : les règles liées à body.pl, #player.dark, #player[data-type]
+   (hero, map, lab, text, quote, end), aux variables --k (rang d'une ligne)
+   et --sheet (hauteur du tiroir), toutes réglées par ce script.
+   ===================================================================== */
+
+/* ---------- 1. Le lecteur plein écran ---------- */
+
+/* Quand le lecteur est actif (classe .pl sur <body>), la page ne défile
+   plus et ne rebondit plus. */
+body.pl {
+  overflow: hidden;
+  height: 100svh;
+  overscroll-behavior: none;
+}
+
+/* Tout le contenu normal de la page est masqué, sauf le lecteur
+   (et les scripts, qui ne s'affichent pas de toute façon). */
+body.pl > *:not(#player):not(script) {
+  display: none !important;
+}
+
+/* Le lecteur couvre tout l'écran. touch-action: none : le navigateur ne
+   défile pas et ne zoome pas au doigt, le script gère lui-même les gestes.
+   Le texte ne peut pas être sélectionné, et le flash gris du toucher est retiré. */
+#player {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- 2. Les trois couches de fond : carte, pile, page ---------- */
+
+/* .pv-map (carte du récit), .pv-lab (pile des Coulisses) et .pv-page (texte
+   en pleine page) sont superposées et couvrent tout l'écran.
+   Ordre d'empilement : la carte au fond (0), la pile au-dessus (1). */
+.pv-map,
+.pv-lab,
+.pv-page {
+  position: absolute;
+  inset: 0;
+}
+.pv-map {
+  z-index: 0;
+}
+.pv-lab {
+  z-index: 1;
+}
+
+/* La scène de la carte, déplacée ici par le script, remplit le lecteur. */
+.pv-map .stage {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+/* La pile des Coulisses : fond noir, invisible par défaut. Elle apparaît
+   en fondu (0,5 seconde) sur les écrans de type « lab ». */
+.pv-lab {
+  background: var(--night);
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#player[data-type="lab"] .pv-lab {
+  opacity: 1;
+}
+
+/* La scène de la pile, centrée, avec une perspective plus forte que sur
+   ordinateur (1400 px au lieu de 1700 px). */
+.pv-lab .stage {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  perspective: 1400px;
+}
+
+/* Taille et position de la pile : 64 % de la largeur (330 px au plus),
+   remontée de 17 % de la hauteur d'écran. Ces valeurs sont remplacées
+   plus bas, dans le bloc 12. */
+.pv-lab .stack {
+  width: min(64vw, 330px);
+  transform: translateY(-17svh) rotateX(var(--rx, 0deg))
+    rotateZ(var(--rz, 0deg));
+}
+
+/* ---------- 3. Le texte en pleine page ---------- */
+
+/* La pleine page : au-dessus de la carte et de la pile (z-index 3), fond
+   papier, texte centré verticalement. Marges : 96 px en haut (place de
+   l'en-tête), 26 px sur les côtés, 56 px en bas, plus les zones d'encoche. */
+.pv-page {
+  z-index: 3;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  padding: 96px max(26px, env(safe-area-inset-right, 0px))
+    calc(56px + env(safe-area-inset-bottom, 0px))
+    max(26px, env(safe-area-inset-left, 0px));
+  transition:
+    opacity 0.45s,
+    background 0.45s;
+}
+
+/* Pleine page inutilisée (.off) : elle s'efface et laisse passer les touchers. */
+.pv-page.off {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Écran sombre (Coulisses) : pleine page noire, texte clair. */
+#player.dark .pv-page {
+  background: var(--night);
+  color: var(--night-text);
+}
+
+/* Écran de citation : pleine page noire, texte couleur papier. */
+#player[data-type="quote"] .pv-page {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* .pv-in : le bloc qui contient le texte d'un écran, en colonne. */
+.pv-page .pv-in {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+}
+
+/* Titre de la pleine page, en 40 px. */
+.pv-page h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+/* Paragraphes de la pleine page, en 19 px gris foncé. */
+.pv-page p {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* Paragraphe d'introduction (.lead), en 23 px noir. */
+.pv-page .lead {
+  font-size: 23px;
+  line-height: 1.42;
+  color: var(--ink);
+}
+
+/* Sur fond sombre ou sur une citation, les paragraphes passent en clair
+   à 78 %. */
+#player.dark .pv-page p,
+#player[data-type="quote"] .pv-page p {
+  color: rgba(244, 244, 241, 0.78);
+}
+
+/* Sur fond sombre, le titre et l'introduction sont en clair plein. */
+#player.dark .pv-page .lead,
+#player.dark .pv-page h2 {
+  color: var(--night-text);
+}
+
+/* La citation : grand texte de 30 px, couleur papier. */
+#player[data-type="quote"] .pv-page p {
+  font-size: 30px;
+  line-height: 1.22;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--paper);
+}
+
+/* L'auteur de la citation, droit et clair à 60 %. */
+#player[data-type="quote"] .pv-page cite {
+  font-style: normal;
+  font-size: 14px;
+  color: rgba(244, 244, 241, 0.6);
+}
+
+/* Écran de fin (crédits) : tout est centré, en petit texte gris. */
+#player[data-type="end"] .pv-page .pv-in {
+  justify-items: center;
+  text-align: center;
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+/* Le bouton « Revoir le récit », centré. */
+#player[data-type="end"] .pv-go {
+  justify-self: center;
+}
+
+/* Le lien des crédits, souligné par un trait rouge (comme dans le pied
+   de page de l'ordinateur). */
+#player[data-type="end"] .pv-page a {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: inset 0 -1px 0 var(--red);
+}
+
+/* ---------- 4. Le tiroir de texte en bas de l'écran ---------- */
+
+/* .pv-sheet : le tiroir posé en bas, par-dessus la carte (z-index 4).
+   Blanc à 94 %, il floute la carte derrière lui ; coins arrondis en haut
+   seulement. Il glisse en 0,55 seconde avec une arrivée douce. */
+.pv-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.45s;
+}
+
+/* Tiroir inutilisé (.off) : il descend sous le bas de l'écran
+   (105 % de sa hauteur, pour cacher aussi son ombre). */
+.pv-sheet.off {
+  transform: translateY(105%);
+}
+
+/* Écran sombre : tiroir gris très foncé, texte clair, ombre plus marquée. */
+#player.dark .pv-sheet {
+  background: rgba(24, 24, 26, 0.92);
+  color: var(--night-text);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Le contenu du tiroir, avec ses marges (agrandies par les zones d'encoche).
+   Ces valeurs sont réduites plus bas, dans le bloc 11. */
+.pv-sheet .pv-in {
+  display: grid;
+  gap: 12px;
+  padding: 22px max(22px, env(safe-area-inset-right, 0px))
+    calc(26px + env(safe-area-inset-bottom, 0px))
+    max(22px, env(safe-area-inset-left, 0px));
+}
+
+/* L'en-tête de la carte de texte (chapitre et date), gris. */
+.pv-sheet .top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--ink-3);
+}
+#player.dark .pv-sheet .top {
+  color: rgba(244, 244, 241, 0.5);
+}
+
+/* Titre du tiroir (29 px, réduit dans le bloc 11). */
+.pv-sheet h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 29px;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* Très grand nombre (« 08:15 »), en 68 px (réduit dans le bloc 11). */
+.pv-sheet .big {
+  margin: 0;
+  font-weight: 600;
+  font-size: 68px;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Paragraphes du tiroir, en 17 px gris foncé (réduits dans le bloc 11). */
+.pv-sheet p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+#player.dark .pv-sheet p {
+  color: rgba(244, 244, 241, 0.76);
+}
+
+/* Photo d'archive en noir et blanc, format 16/8 (réduite en vignette
+   dans le bloc 11). */
+.pv-sheet img {
+  width: 100%;
+  aspect-ratio: 16/8;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  filter: grayscale(1) contrast(1.05);
+}
+
+/* Pas de légende de photo dans le tiroir. */
+.pv-sheet figcaption {
+  display: none;
+}
+
+/* Chiffres clés en 20 px (réduits dans le bloc 11). */
+.pv-sheet .stats b {
+  font-size: 20px;
+}
+
+/* ---------- 5. L'invitation « Touchez pour... » ---------- */
+
+/* .pv-go : une pilule noire (« Touchez pour commencer », « Touchez pour
+   déclencher », « Revoir le récit ») qui remplace le bouton à maintenir. */
+.pv-go {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Un point rouge de 8 px à droite du texte, qui clignote doucement
+   (animation « pvp », un cycle toutes les 1,4 secondes). */
+.pv-go::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: pvp 1.4s infinite;
+}
+
+/* À mi-cycle, le point tombe à 25 % d'opacité, puis revient. */
+@keyframes pvp {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* ---------- 6. L'écran d'ouverture ---------- */
+
+/* Sur l'ouverture, le tiroir n'a ni flou, ni ombre, ni arrondi : c'est un
+   dégradé qui part du transparent en haut et devient couleur papier
+   à 22 % de sa hauteur. La carte de Hiroshima reste visible au-dessus. */
+#player[data-type="hero"] .pv-sheet {
+  background: linear-gradient(180deg, rgba(244, 244, 241, 0), var(--paper) 22%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Plus d'espace entre les lignes, et 80 px en haut pour la zone en dégradé. */
+#player[data-type="hero"] .pv-sheet .pv-in {
+  gap: 18px;
+  padding-top: 80px;
+}
+
+/* Le grand titre de l'ouverture, en 52 px. */
+#player[data-type="hero"] h1 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 52px;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+}
+
+/* « feu atomique » en rouge, sans italique. */
+#player[data-type="hero"] h1 em {
+  font-style: normal;
+  color: var(--red);
+}
+
+/* Le chapeau sous le titre, en 18 px gris foncé. */
+#player[data-type="hero"] .dek {
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* Pas de légende sur l'ouverture. */
+#player[data-type="hero"] .legend {
+  display: none;
+}
+
+/* ---------- 7. Entrées et sorties du texte ---------- */
+
+/* À l'arrivée d'un écran, le texte monte ligne après ligne et l'ancien
+   s'efface. Chaque ligne joue l'animation « pvup » en 0,6 seconde, avec un
+   retard de 90 ms plus 55 ms par rang (--k = 0 pour la 1re ligne, 1 pour
+   la 2e...). « both » garde la ligne invisible avant son départ. */
+.pv-in > * {
+  animation: pvup 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--k, 0) * 55ms + 90ms);
+}
+
+/* En revenant en arrière (.back), les lignes descendent au lieu de monter. */
+.pv-in.back > * {
+  animation-name: pvdown;
+}
+
+/* pvup : la ligne part de 22 px plus bas, invisible. */
+@keyframes pvup {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+
+/* pvdown : la ligne part de 16 px plus haut, invisible. */
+@keyframes pvdown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+/* L'ancien texte (.out) : posé en bas du tiroir, il s'efface en glissant
+   de 12 px vers le bas en 0,22 seconde, avant d'être retiré par le script. */
+.pv-in.out {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.22s,
+    transform 0.22s;
+  pointer-events: none;
+}
+
+/* Dans la pleine page, l'ancien texte reste centré verticalement
+   (top: 50 %) pendant qu'il s'efface. */
+.pv-page .pv-in.out {
+  left: max(26px, env(safe-area-inset-left, 0px));
+  right: max(26px, env(safe-area-inset-right, 0px));
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-46%);
+}
+
+/* ---------- 8. L'en-tête : segments du chapitre, comme des stories ---------- */
+
+/* L'en-tête tout en haut, au-dessus de tout (z-index 6), fond papier.
+   Il change de couleur en fondu selon le type d'écran. */
+.pv-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 6;
+  padding: calc(10px + env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px)) 10px
+    max(12px, env(safe-area-inset-left, 0px));
+  background: var(--paper);
+  pointer-events: none;
+  transition:
+    background 0.45s,
+    color 0.45s;
+}
+
+/* Écran sombre ou citation : en-tête sombre, texte clair. */
+#player.dark .pv-top,
+#player[data-type="quote"] .pv-top {
+  background: var(--night);
+  color: var(--night-text);
+}
+#player[data-type="quote"] .pv-top {
+  background: var(--ink);
+}
+
+/* Les segments : un petit trait de 3 px par écran du chapitre, côte à côte,
+   tous de même largeur (flex: 1). */
+.pv-segs {
+  display: flex;
+  gap: 4px;
+}
+.pv-segs i {
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(17, 17, 17, 0.14);
+  transition: background 0.3s;
+}
+
+/* Segment déjà vu (.done) : gris foncé. Segment de l'écran actuel (.on) :
+   rouge. Les segments à venir restent gris clair. */
+.pv-segs i.done {
+  background: rgba(17, 17, 17, 0.6);
+}
+.pv-segs i.on {
+  background: var(--red);
+}
+
+/* Les mêmes segments en version claire sur fond sombre. */
+#player.dark .pv-segs i,
+#player[data-type="quote"] .pv-segs i {
+  background: rgba(244, 244, 241, 0.2);
+}
+#player.dark .pv-segs i.done,
+#player[data-type="quote"] .pv-segs i.done {
+  background: rgba(244, 244, 241, 0.7);
+}
+#player.dark .pv-segs i.on,
+#player[data-type="quote"] .pv-segs i.on {
+  background: var(--red);
+}
+
+/* La ligne sous les segments : chapitre (b), sous-titre (em) et compteur
+   « 2 / 5 » (span), en petites majuscules sur une seule ligne. */
+.pv-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 9px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Le sous-titre, atténué ; s'il est trop long, il est coupé par « ... ». */
+.pv-meta em {
+  font-style: normal;
+  opacity: 0.55;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Le compteur, poussé à droite, avec des chiffres de largeur égale. */
+.pv-meta span {
+  margin-left: auto;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 9. Légende et mini-carte sous le titre ---------- */
+
+/* Sous le titre : la légende à gauche, la mini-carte à droite ; rien ne
+   flotte sur la carte. Cette zone n'apparaît que sur les écrans de carte. */
+.pv-ctx {
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 9px;
+}
+#player[data-type="map"] .pv-ctx {
+  display: flex;
+}
+
+/* La place de la légende prend toute la largeur restante. */
+.pv-leg {
+  flex: 1;
+  min-width: 0;
+}
+
+/* La légende, déplacée ici par le script, perd sa position flottante et
+   s'aligne à gauche, sur plusieurs lignes si besoin. */
+body.pl .pv-leg .legend {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: none;
+  justify-content: flex-start;
+}
+
+/* Légende inutile pour cet écran : retirée complètement. */
+body.pl .pv-leg .legend.off {
+  display: none;
+}
+
+/* Pastilles de légende sans ombre, sur un fond gris très léger. */
+body.pl .pv-leg .legend span {
+  box-shadow: none;
+  background: rgba(17, 17, 17, 0.055);
+  font-size: 11px;
+  padding: 3px 8px 3px 4px;
+}
+
+/* Les entrées secondaires de la légende (.opt) sont masquées. */
+body.pl .pv-leg .legend .opt {
+  display: none;
+}
+
+/* Sur l'ouverture, l'en-tête est invisible. */
+#player[data-type="hero"] .pv-top {
+  opacity: 0;
+}
+
+/* ---------- 10. La bulle d'aide et la mini-carte ---------- */
+
+/* .pv-hint : la bulle « Touchez à droite pour avancer », sur le bord droit,
+   à 22 % de la hauteur d'écran. Elle est masquée par défaut. */
+.pv-hint {
+  position: absolute;
+  right: 14px;
+  top: calc(env(safe-area-inset-top, 0px) + 22%);
+  z-index: 7;
+  display: none;
+  pointer-events: none;
+}
+
+/* La bulle : pilule noire qui oscille de gauche à droite (animation « pvh »). */
+.pv-hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+  animation: pvh 1.8s ease-in-out infinite;
+}
+
+/* Une petite flèche « > » dessinée avec deux bordures d'un carré tourné
+   de 45 degrés. */
+.pv-hint span::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-top: 1.6px solid currentColor;
+  border-right: 1.6px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* À mi-cycle, la bulle se décale de 6 px vers la gauche, puis revient. */
+@keyframes pvh {
+  50% {
+    transform: translateX(-6px);
+  }
+}
+
+/* La bulle ne s'affiche que sur l'écran d'ouverture. */
+#player[data-type="hero"] .pv-hint {
+  display: block;
+}
+
+/* La mini-carte de situation (.pv-loc) : un petit canevas de 92 x 64 px,
+   à droite de la légende, avec un fin contour gris. */
+.pv-loc {
+  flex: none;
+  width: 92px;
+  height: 64px;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+  transition: opacity 0.4s;
+}
+
+/* Mini-carte inutile pour cet écran : retirée. */
+.pv-loc.off {
+  display: none;
+}
+
+/* ---------- 11. Tiroir compact : un tiers d'écran au plus ---------- */
+
+/* Ces règles remplacent celles du bloc 4 pour garder le tiroir compact
+   et laisser voir la carte. Coins un peu moins arrondis. */
+.pv-sheet {
+  border-radius: 22px 22px 0 0;
+}
+
+/* Marges réduites et une seule colonne. minmax(0, 1fr) empêche un long mot
+   ou une image d'élargir la colonne au-delà de l'écran. */
+.pv-sheet .pv-in {
+  gap: 8px;
+  padding: 16px max(18px, env(safe-area-inset-right, 0px))
+    calc(18px + env(safe-area-inset-bottom, 0px))
+    max(18px, env(safe-area-inset-left, 0px));
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* L'en-tête de la carte de texte est masqué : il est déjà dans .pv-top. */
+.pv-sheet .pv-in > .top {
+  display: none;
+}
+
+/* Titre, très grand nombre et paragraphes plus petits. */
+.pv-sheet h3 {
+  font-size: 21px;
+  line-height: 1.1;
+}
+.pv-sheet .big {
+  font-size: 42px;
+}
+.pv-sheet p {
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+/* Si le texte contient une photo, on passe à deux colonnes : la photo en
+   vignette de 64 px à gauche, le titre à côté. */
+.pv-sheet .pv-in:has(> img) {
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+
+/* La photo devient une vignette carrée de 64 x 64 px. */
+.pv-sheet .pv-in > img {
+  width: 64px;
+  height: 64px;
+  aspect-ratio: auto;
+  border-radius: 12px;
+  grid-row: span 1;
+}
+
+/* Tout le reste (sauf la photo et le titre) reprend toute la largeur,
+   de la première à la dernière colonne (1/-1). */
+.pv-sheet .pv-in:has(> img) > :not(img):not(h3) {
+  grid-column: 1/-1;
+}
+
+/* Chiffres clés plus compacts. */
+.pv-sheet .stats {
+  gap: 6px;
+}
+.pv-sheet .stats div {
+  padding: 7px 9px;
+  border-radius: 12px;
+  gap: 2px;
+}
+.pv-sheet .stats b {
+  font-size: 15px;
+}
+.pv-sheet .stats span {
+  font-size: 9px;
+}
+
+/* Sur fond sombre, le fond des cases de chiffres est clair à 7 %. */
+#player.dark .pv-sheet .stats div {
+  background: rgba(244, 244, 241, 0.07);
+}
+
+/* L'invitation « Touchez pour... » plus petite dans le tiroir... */
+.pv-sheet .pv-go {
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+/* ...sauf sur l'ouverture, où elle garde sa taille normale. */
+#player[data-type="hero"] .pv-sheet .pv-go {
+  padding: 12px 18px;
+  font-size: 15px;
+}
+
+/* ---------- 12. Coulisses : la pile tient entre l'en-tête et le texte ---------- */
+
+/* La scène de la pile laisse 52 px en haut pour l'en-tête et, en bas,
+   la hauteur du tiroir (--sheet, réglée par le script ; 36 % de la hauteur
+   d'écran par défaut). La pile se centre dans l'espace restant. */
+.pv-lab .stage {
+  padding: calc(env(safe-area-inset-top, 0px) + 52px) 0 var(--sheet, 36svh);
+  box-sizing: border-box;
+}
+
+/* La pile prend la plus petite de ces tailles : 56 % de la largeur,
+   30 % de la hauteur d'écran, ou 300 px. Elle n'est plus décalée,
+   seulement inclinée (--rx) et tournée (--rz). */
+.pv-lab .stack {
+  width: min(56vw, 30svh, 300px);
+  transform: rotateX(var(--rx, 0deg)) rotateZ(var(--rz, 0deg));
+}
+
+/* ---------- 13. Moins d'animations ---------- */
+
+/* Si la personne a demandé moins d'animations dans son système, le texte
+   apparaît d'un coup et la bulle d'aide reste immobile. */
+@media (prefers-reduced-motion: reduce) {
+  .pv-in > * {
+    animation: none;
+  }
+  .pv-hint span {
+    animation: none;
+  }
+}

@@ -1,0 +1,99 @@
+/* =====================================================================
+   BARRE DU HAUT : MENU DES CHAPITRES ET BARRE DE PROGRESSION
+   ---------------------------------------------------------------------
+   Ce fichier met en forme la barre fixée en haut de l'écran : un menu en
+   forme de pilule avec les cinq chapitres, et un fin trait rouge qui
+   s'allonge à mesure que l'on avance dans la page.
+   Utilise : les variables de 01-base.css (--glass, --ink, --red...),
+   les éléments header.bar, nav.nav et #progress de index.html.
+   Fournit : la classe .on (chapitre en cours), ajoutée par
+   scripts/11-navigation-textes.js. La largeur de .progress est réglée par
+   les scripts pendant le défilement.
+   ===================================================================== */
+
+/* ---------- 1. La barre ---------- */
+
+/* La barre reste fixée en haut de l'écran, sous l'encoche éventuelle.
+   Elle ne capte pas les clics (pointer-events: none) pour ne pas gêner la
+   carte en dessous ; seuls ses enfants, comme le menu, restent cliquables. */
+.bar {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px max(20px, env(safe-area-inset-right, 0px)) 0
+    max(20px, env(safe-area-inset-left, 0px));
+  pointer-events: none;
+}
+.bar > * {
+  pointer-events: auto;
+}
+
+/* ---------- 2. Le menu des chapitres ---------- */
+
+/* Le menu : une pilule blanche semi-transparente qui floute ce qui passe
+   derrière (effet verre dépoli), avec une ombre légère.
+   margin-left: auto la pousse contre le bord droit. */
+.nav {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+  margin-left: auto;
+}
+
+/* Chaque lien du menu : texte gris, sans soulignement, dans une petite
+   pilule. Le fond et la couleur changent en douceur (0,2 seconde). */
+.nav a {
+  color: var(--ink-3);
+  text-decoration: none;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+/* Au survol de la souris ou au clavier, le lien passe en noir. */
+.nav a:hover,
+.nav a:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+/* Le chapitre en cours : pilule noire, texte clair. */
+.nav a.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- 3. La barre de progression ---------- */
+
+/* Un trait rouge de 3 px tout en haut de l'écran. Il part d'une largeur nulle
+   et les scripts l'allongent selon la part de la page déjà lue. */
+.progress {
+  position: fixed;
+  left: 0;
+  top: env(safe-area-inset-top, 0px);
+  height: 3px;
+  background: var(--red);
+  width: 0;
+  z-index: 55;
+}
+
+/* ---------- 4. Alignement du menu ---------- */
+
+/* Le menu des chapitres est calé à droite de la barre. */
+.bar {
+  justify-content: flex-end;
+}

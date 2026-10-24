@@ -1,0 +1,183 @@
+/* =====================================================================
+   OUVERTURE : LE GRAND TITRE DU DÉBUT
+   ---------------------------------------------------------------------
+   Ce fichier met en forme le premier écran du site : une carte en fond
+   (le canevas #heroMap), un dégradé clair qui la fait pâlir à gauche, puis
+   le titre, le chapeau, les crédits et l'invitation à faire défiler.
+   Utilise : les variables de 01-base.css, les éléments .hero, .hwrap, .in,
+   .stamp, h1, .dek, .byline et .cue de index.html.
+   Fournit : l'animation « cue » (la petite molette de souris qui bouge).
+   ===================================================================== */
+
+/* ---------- 1. Le cadre de l'ouverture ---------- */
+
+/* Le bloc d'ouverture occupe au moins toute la hauteur de l'écran (100svh).
+   Son contenu est posé en bas (align-items: end). */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+}
+
+/* La carte de fond couvre tout le bloc. */
+.hero canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Un voile posé sur la carte : couleur papier pleine à gauche (jusqu'à 18 %
+   de la largeur), à moitié transparent au milieu (55 %), presque invisible
+   à droite. Le titre reste lisible et la carte apparaît sur la droite. */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--paper) 18%,
+    rgba(244, 244, 241, 0.55) 55%,
+    rgba(244, 244, 241, 0.1)
+  );
+  pointer-events: none;
+}
+
+/* Le contenu texte passe au-dessus du voile (z-index: 2), avec 120 px de
+   marge en haut, 64 px en bas, et 760 px de large au plus. */
+.hero .in {
+  position: relative;
+  z-index: 2;
+  padding-block: 120px 64px;
+  display: grid;
+  gap: 22px;
+  max-width: 760px;
+}
+
+/* ---------- 2. Les pastilles de date ---------- */
+
+/* Les pastilles « 80 ans » et « 6 et 9 août 1945 » : la première noire,
+   la suivante rouge. */
+.stamp {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stamp span {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.stamp span + span {
+  background: var(--red);
+}
+
+/* ---------- 3. Le titre et le chapeau ---------- */
+
+/* Le grand titre : sa taille suit la largeur de l'écran (8,4 % de la largeur),
+   entre 46 px et 118 px. Lignes serrées (0.92) et lettres rapprochées.
+   text-wrap: balance équilibre la longueur des lignes. */
+.hero h1 {
+  margin: 0;
+  font-weight: 600;
+  font-size: clamp(46px, 8.4vw, 118px);
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+/* « feu atomique », mis en valeur en rouge et sans italique. */
+.hero h1 em {
+  font-style: normal;
+  color: var(--red);
+}
+
+/* Le chapeau sous le titre : entre 17 et 21 px, en gris foncé,
+   limité à 40 caractères par ligne environ (40ch). */
+.dek {
+  margin: 0;
+  font-size: clamp(17px, 1.7vw, 21px);
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 40ch;
+}
+
+/* La ligne de crédits (Master SIGAT, Ouest-France, temps de lecture). */
+.byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  color: var(--ink-3);
+}
+
+/* ---------- 4. L'invitation à faire défiler ---------- */
+
+/* « Fais défiler », précédé d'un dessin de molette de souris. */
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+/* Le contour de la souris : une pilule de 28 x 44 px dessinée par une ombre
+   intérieure de 1,5 px. */
+.cue i {
+  width: 28px;
+  height: 44px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+  position: relative;
+}
+
+/* La molette : un petit trait rouge centré qui descend en boucle
+   (animation « cue », un cycle toutes les 1,8 secondes). */
+.cue i::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 9px;
+  width: 4px;
+  height: 8px;
+  margin-left: -2px;
+  border-radius: 4px;
+  background: var(--red);
+  animation: cue 1.8s infinite;
+}
+
+/* L'animation : la molette descend de 14 px en s'effaçant pendant 70 % du
+   cycle, reste invisible, puis repart d'en haut. */
+@keyframes cue {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Si la personne a demandé moins d'animations, la molette reste immobile. */
+@media (prefers-reduced-motion: reduce) {
+  .cue i::after {
+    animation: none;
+  }
+}
+
+/* ---------- 5. Position du bloc de titre ---------- */
+
+/* Le bloc de titre est collé à gauche, avec une marge qui grandit avec
+   l'écran : 6 % de la largeur, entre 20 et 110 px. */
+.hwrap {
+  width: 100%;
+  padding-left: max(clamp(20px, 6vw, 110px), env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}

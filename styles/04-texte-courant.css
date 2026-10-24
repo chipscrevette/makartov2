@@ -1,0 +1,86 @@
+/* =====================================================================
+   TEXTE COURANT : INTRODUCTION, HÉRITAGE ET CITATION
+   ---------------------------------------------------------------------
+   Ce fichier met en forme les passages de texte entre les cartes :
+   l'introduction « Juillet 1945 », la partie « Héritage » et le début des
+   « Coulisses SIG ». On y trouve le surtitre rouge, le titre, les
+   paragraphes et la citation d'Oppenheimer sur fond noir.
+   Utilise : les variables de 01-base.css et les blocs .prose de index.html.
+   Fournit : les classes .prose, .kicker et .lead.
+   ===================================================================== */
+
+/* ---------- 1. La colonne de texte ---------- */
+
+/* Une colonne étroite (680 px au plus), centrée, avec beaucoup d'air
+   au-dessus et en dessous : 12 % de la hauteur d'écran, entre 72 et 140 px. */
+.prose {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-block: clamp(72px, 12vh, 140px);
+  display: grid;
+  gap: 20px;
+}
+
+/* ---------- 2. Surtitre, titre et paragraphes ---------- */
+
+/* Le surtitre (« Juillet 1945 », « Héritage ») en rouge. */
+.kicker {
+  color: var(--red);
+}
+
+/* Le titre de section : entre 32 et 56 px, lignes serrées. */
+.prose h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: clamp(32px, 4.4vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+/* Les paragraphes : 18 px, interligne aéré, gris foncé.
+   text-wrap: pretty évite un mot seul sur la dernière ligne. */
+.prose p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* Le premier paragraphe (.lead), plus grand et en noir. */
+.prose .lead {
+  font-size: clamp(20px, 2vw, 24px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ---------- 3. La citation ---------- */
+
+/* La citation : un bloc noir aux coins arrondis, texte clair. */
+blockquote {
+  margin: 12px 0 0;
+  padding: 24px 26px;
+  border-radius: var(--r);
+  background: var(--ink);
+  color: var(--paper);
+  display: grid;
+  gap: 10px;
+}
+
+/* Le texte cité, en 22 px. Les !important l'emportent sur la règle
+   .prose p ci-dessus, qui sinon le mettrait en gris et en 18 px. */
+blockquote p {
+  color: var(--paper) !important;
+  font-size: 22px !important;
+  line-height: 1.4 !important;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* L'auteur de la citation, droit (pas d'italique) et clair à 60 %. */
+blockquote cite {
+  font-style: normal;
+  color: rgba(244, 244, 241, 0.6);
+  font-size: 14px;
+}

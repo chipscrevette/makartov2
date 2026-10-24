@@ -1,0 +1,335 @@
+<!doctype html>
+<!--
+  MARKARTO : Hiroshima, Nagasaki, et la même empreinte posée sur Rennes.
+  Projet du Master SIGAT (Université Rennes 2) avec Ouest-France.
+
+  Cette page ne contient que le texte et la structure du récit.
+  L'apparence est dans le dossier styles/, le comportement dans scripts/,
+  les données géographiques dans donnees/ et les images dans images/.
+  Le fichier LISEZMOI.md explique l'organisation complète.
+-->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Markarto</title>
+  <meta name="description" content="Hiroshima, Nagasaki, et la même empreinte posée sur Rennes : un récit cartographique.">
+
+  <!-- Police : Geist, la seule police du site -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap">
+
+  <!-- Styles : un fichier par partie du site, dans l'ordre de la page -->
+  <link rel="stylesheet" href="styles/01-base.css">
+  <link rel="stylesheet" href="styles/02-barre-du-haut.css">
+  <link rel="stylesheet" href="styles/03-ouverture.css">
+  <link rel="stylesheet" href="styles/04-texte-courant.css">
+  <link rel="stylesheet" href="styles/05-carte-du-recit.css">
+  <link rel="stylesheet" href="styles/06-coulisses-sig.css">
+  <link rel="stylesheet" href="styles/07-pied-de-page.css">
+  <link rel="stylesheet" href="styles/08-telephone.css">
+  <link rel="stylesheet" href="styles/09-lecteur-telephone.css">
+</head>
+<body>
+
+<!-- =====================================================================
+     1. BARRE DU HAUT
+     Une fine barre rouge de progression, et le menu des chapitres (masqué sur téléphone).
+     ===================================================================== -->
+<div class="progress" id="progress"></div>
+<header class="bar">
+  <nav class="nav" aria-label="Chapitres">
+    <a href="#pacifique" data-c="pacifique">Pacifique</a><a href="#hiroshima" data-c="hiroshima">Hiroshima</a><a href="#nagasaki" data-c="nagasaki">Nagasaki</a><a href="#rennes" data-c="rennes">Rennes</a><a href="#coulisses" data-c="coulisses">Coulisses SIG</a>
+  </nav>
+</header>
+
+<!-- =====================================================================
+     2. OUVERTURE
+     Grand titre posé sur une carte de Hiroshima en fond (dessinée dans le canevas #heroMap).
+     ===================================================================== -->
+<header class="hero" id="top">
+  <canvas id="heroMap" aria-hidden="true"></canvas>
+  <div class="hwrap"><div class="in">
+    <div class="stamp cap"><span>80 ans</span><span>6 et 9 août 1945</span></div>
+    <h1>Le Japon frappé par le <em>feu atomique</em></h1>
+    <p class="dek">Deux bombes, deux villes, trois jours d'écart. Nos cartes, numérisées depuis les relevés de l'armée américaine, montrent ce qui a disparu. Puis la même empreinte, posée sur Rennes.</p>
+    <div class="byline cap"><span>Master SIGAT, Université Rennes 2</span><span>avec Ouest-France</span><span>Lecture 8 min</span></div>
+    <span class="cue"><i></i>Fais défiler</span>
+  </div></div>
+</header>
+
+<!-- =====================================================================
+     3. INTRODUCTION
+     Texte de contexte : juillet 1945.
+     ===================================================================== -->
+<section class="wrap" aria-label="Introduction"><div class="prose">
+  <span class="kicker cap">Juillet 1945</span>
+  <p class="lead">L'Allemagne a capitulé, mais la guerre continue dans le Pacifique. Le 26 juillet, la déclaration de Potsdam somme le Japon de se rendre sans conditions. Tokyo refuse. Les États-Unis, qui redoutent le coût d'une invasion terrestre après Okinawa, disposent depuis quelques jours d'une arme que personne n'a jamais employée.</p>
+  <p>Lancé dans le secret en 1942, le projet Manhattan a mobilisé des dizaines de milliers de personnes pour la mettre au point. Une unité de bombardement spéciale attend sur l'île de Tinian, dans les Mariannes.</p>
+</div></section>
+
+<!-- =====================================================================
+     4. LE RÉCIT CARTOGRAPHIQUE
+     La carte (#map) reste fixe en fond pendant que les textes (.step) défilent par-dessus.
+     Chaque .step porte data-s="chapitre:étape" : le script choisit la carte à afficher.
+     ===================================================================== -->
+<section class="story" id="story">
+  <div class="stage" id="stage">
+    <canvas id="map" aria-label="Carte du récit"></canvas>
+    <div id="flash"></div>
+    <div class="legend off" id="legend" aria-label="Légende">
+      <span><i class="sw" style="background:var(--water)"></i>Eau</span>
+      <span><i class="sw" style="background:#C8C8C4"></i>Rues</span>
+      <span><i class="sw" style="background:#111"></i>Bâti</span>
+      <span class="z"><i class="sw" style="background:var(--red-soft)"></i>Rasé</span>
+      <span class="z"><i class="sw" style="background:repeating-linear-gradient(45deg,var(--red) 0 1.2px,var(--red-hatch) 1.2px 4px);outline:1.5px dashed var(--red);outline-offset:-1.5px"></i><em style="font-style:normal" id="lg-par">Endommagé</em></span>
+    </div>
+    <div class="legend pac off" id="legendPac" aria-label="Légende de la carte du Pacifique">
+      <span><i class="sw" style="background:#9E1219"></i>Japon en 1930</span>
+      <span><i class="sw" style="background:#E5262D"></i>Conquêtes jusqu'en 1938</span>
+      <span><i class="sw" style="background:#F4A9A6"></i>Conquêtes en 1942</span>
+      <span><i class="sw" style="background:#1A1A1A"></i>Alliés</span>
+      <span class="opt"><i class="sw" style="background:#B4B4AF"></i>URSS</span>
+      <span class="opt"><i class="sw ln"></i>Extension maximale</span>
+      <span class="opt"><svg class="sw" viewBox="0 0 15 15"><path d="M7.5 2 14 12.5H1z" fill="#111"/></svg>Bataille</span>
+    </div>
+    <nav class="strip off" id="strip" aria-label="Planche contact"></nav>
+  </div>
+  <!-- Les textes du récit, dans l'ordre de lecture -->
+  <div class="steps" id="steps">
+    <!-- I. Pacifique -->
+    <div class="step" id="pacifique" data-s="pac:0"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>1930</span></div>
+      <h3>Un empire déjà en place</h3>
+      <p>Avant la guerre, le Japon tient déjà Taïwan (1895), le sud de Sakhaline (1905), la Corée (1910) et, sous mandat, les archipels du Pacifique pris à l'Allemagne (1919).</p>
+    </div></div>
+    <div class="step" data-s="pac:1"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>1931 à 1938</span></div>
+      <h3>La Chine envahie</h3>
+      <p>L'armée japonaise s'empare de la Mandchourie en 1931, puis lance en 1937 une guerre ouverte contre la Chine. Fin 1938, Pékin, Shanghai et Nankin sont tombées.</p>
+    </div></div>
+    <div class="step" data-s="pac:2"><figure class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>7 décembre 1941</span></div>
+      <img src="images/photos/pearl-harbor.jpg" alt="L'USS California endommagé à Pearl Harbor">
+      <figcaption>L'USS California, touché pendant l'attaque.</figcaption>
+      <h3>Pearl Harbor</h3>
+      <p>Sans déclaration de guerre, l'aviation japonaise frappe la base navale américaine d'Hawaï. Les huit cuirassés du port sont touchés. Les États-Unis entrent dans la guerre.</p>
+    </figure></div>
+    <div class="step" data-s="pac:3"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Printemps 1942</span></div>
+      <h3>L'apogée</h3>
+      <p>En six mois, le Japon s'empare des Philippines, de la Malaisie, de Singapour, des Indes néerlandaises et de la Birmanie. Le trait rouge marque son extension maximale.</p>
+    </div></div>
+    <div class="step" data-s="pac:4"><figure class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>4 au 7 juin 1942</span></div>
+      <img src="images/photos/midway.jpg" alt="Le porte-avions USS Enterprise à Midway">
+      <figcaption>Le porte-avions USS Enterprise pendant la bataille.</figcaption>
+      <h3>Midway</h3>
+      <p>Un mois après la bataille de la mer de Corail, quatre porte-avions japonais sont coulés près de l'atoll de Midway. L'expansion japonaise s'arrête là.</p>
+    </figure></div>
+    <div class="step" data-s="pac:5"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Août 1942 à février 1943</span></div>
+      <h3>Guadalcanal</h3>
+      <p>Première grande offensive américaine : six mois de combats dans la jungle des Salomon pour un aérodrome. Pour la première fois, le Japon recule.</p>
+    </div></div>
+    <div class="step" data-s="pac:6"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Novembre 1943 à juillet 1944</span></div>
+      <h3>Par le centre du Pacifique</h3>
+      <p>Tarawa, Kwajalein, puis Saipan : les Marines avancent d'atoll en atoll. Depuis les Mariannes, les B-29 peuvent atteindre Tokyo.</p>
+    </div></div>
+    <div class="step" data-s="pac:7"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Septembre et octobre 1944</span></div>
+      <h3>Retour aux Philippines</h3>
+      <p>Au sud, la seconde offensive remonte la Nouvelle-Guinée jusqu'à Peleliu, puis débarque à Leyte, au cœur des Philippines.</p>
+    </div></div>
+    <div class="step" data-s="pac:8"><figure class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Février et mars 1945</span></div>
+      <img src="images/photos/iwo-jima.jpg" alt="Marines sur les plages volcaniques d'Iwo Jima">
+      <figcaption>Des Marines sur le sable volcanique d'Iwo Jima.</figcaption>
+      <h3>Iwo Jima</h3>
+      <p>Cinq semaines de combats pour une île de 21 km², à mi-chemin entre les Mariannes et Tokyo : une piste de secours pour les B-29.</p>
+    </figure></div>
+    <div class="step" data-s="pac:9"><figure class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>Avril à juin 1945</span></div>
+      <img src="images/photos/okinawa.jpg" alt="Assaut amphibie sur Okinawa">
+      <figcaption>Assaut amphibie sur Okinawa.</figcaption>
+      <h3>Okinawa</h3>
+      <p>Plus de 200 000 morts, civils compris. Pour Washington, c'est l'aperçu de ce que coûterait un débarquement sur l'archipel.</p>
+    </figure></div>
+    <div class="step" data-s="pac:10"><figure class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>16 au 26 juillet 1945</span></div>
+      <img src="images/photos/trinity.jpg" alt="La bombe de l'essai Trinity sur sa tour">
+      <figcaption>L'essai Trinity, désert du Nouveau-Mexique.</figcaption>
+      <h3>Trinity, puis Tinian</h3>
+      <p>Au Nouveau-Mexique, la première bombe atomique explose : l'arme fonctionne. Dix jours plus tard, le croiseur USS Indianapolis livre les pièces de Little Boy à Tinian, où attend le 509e groupe de bombardement.</p>
+    </figure></div>
+    <div class="step" data-s="pac:11"><div class="card">
+      <div class="top cap"><span><b class="ch">I</b>Le Pacifique</span><span>6 août 1945, 2 h 45</span></div>
+      <h3>Tinian, piste nord</h3>
+      <p>Le B-29 <i>Enola Gay</i> décolle avec « Little Boy » à son bord. Six heures de vol jusqu'à Hiroshima.</p>
+      <div class="stats two"><div><b data-km="tinH">2 530</b><span>km jusqu'à Hiroshima</span></div><div><b>3</b><span>jours avant Nagasaki</span></div></div>
+    </div></div>
+
+    <!-- II. Hiroshima -->
+    <div class="step" id="hiroshima" data-s="hiro:before"><div class="card">
+      <div class="top cap"><span><b class="ch">II</b>Hiroshima</span><span>6 août 1945</span></div>
+      <p class="big">08:15</p>
+      <p>Un lundi matin. La ville s'étale sur le delta de l'Ōta, coupée en îles par ses bras de rivière. Sur la carte, la ville d'aujourd'hui : chaque bâtiment en noir.</p>
+      <button class="fire" data-fire="hiro"></button>
+    </div></div>
+    <div class="step" data-s="hiro:after"><div class="card">
+      <div class="top cap"><span><b class="ch">II</b>Hiroshima</span><span>Little Boy</span></div>
+      <h3>Le centre du delta est rasé</h3>
+      <p>La bombe explose à 600 m au-dessus de l'hôpital Shima. En rouge plein, les quartiers rasés ; hachurés, ceux qui ont été endommagés.</p>
+      <div class="stats"><div><b>16 kt</b><span>Puissance</span></div><div><b>11,1 km²</b><span>Rasés</span></div><div><b>10,8 km²</b><span>Endommagés</span></div></div>
+    </div></div>
+    <div class="step" data-s="hiro:after"><div class="card">
+      <div class="top cap"><span><b class="ch">II</b>Hiroshima</span><span>Fin 1945</span></div>
+      <p class="big">≈ 140 000</p>
+      <p>C'est l'estimation retenue par la ville de Hiroshima pour les morts d'ici la fin de 1945. Le Dôme de Genbaku, à 160 m de l'hypocentre, est resté debout ; il est inscrit au patrimoine mondial depuis 1996.</p>
+    </div></div>
+
+    <!-- III. Nagasaki -->
+    <div class="step" id="nagasaki" data-s="naga:before"><div class="card">
+      <div class="top cap"><span><b class="ch">III</b>Nagasaki</span><span>9 août 1945</span></div>
+      <p class="big">11:02</p>
+      <p>Trois jours plus tard. Le B-29 <i>Bockscar</i> vise d'abord Kokura, cachée par les nuages, puis se rabat sur Nagasaki, un port coincé entre des collines.</p>
+      <button class="fire" data-fire="naga"></button>
+    </div></div>
+    <div class="step" data-s="naga:after"><div class="card">
+      <div class="top cap"><span><b class="ch">III</b>Nagasaki</span><span>Fat Man</span></div>
+      <h3>Une vallée, pas une ville entière</h3>
+      <p>Plus puissante qu'à Hiroshima, la bombe explose à environ 500 m au-dessus de la vallée d'Urakami. Les collines contiennent le souffle : la surface rasée est sept fois plus petite.</p>
+      <div class="stats"><div><b>21 kt</b><span>Puissance</span></div><div><b>1,6 km²</b><span>Rasés</span></div><div><b>1,0 km²</b><span>Incendiés</span></div></div>
+    </div></div>
+    <div class="step" data-s="naga:after"><div class="card">
+      <div class="top cap"><span><b class="ch">III</b>Nagasaki</span><span>Fin 1945</span></div>
+      <p class="big">≈ 74 000</p>
+      <p>Morts d'ici la fin de 1945, selon la ville de Nagasaki. Le 15 août, l'empereur Hirohito annonce à la radio que le Japon accepte la reddition.</p>
+    </div></div>
+
+    <div class="step" data-s="bombs:0"><div class="card">
+      <div class="top cap"><span>Bilan</span><span>Little Boy et Fat Man</span></div>
+      <h3>Deux bombes, deux bilans</h3>
+      <p>Rapportées à la surface urbaine étudiée, 28,4 km² à Hiroshima et 7,6 km² à Nagasaki : la bombe la plus faible a détruit la plus grande part de sa ville. Le relief de Nagasaki a protégé les deux tiers de la ville.</p>
+    </div></div>
+
+    <!-- IV. Rennes -->
+    <div class="step" id="rennes" data-s="ren:before"><div class="card">
+      <div class="top cap"><span><b class="ch">IV</b>Rennes</span><span>Simulation</span></div>
+      <p class="big">Ici ?</p>
+      <p>Rennes aujourd'hui, à la même échelle que Hiroshima. Le centre historique, la Vilaine, la gare. Maintiens le bouton pour superposer la zone détruite de Hiroshima.</p>
+      <button class="fire" data-fire="ren"></button>
+    </div></div>
+    <div class="step" data-s="ren:after"><div class="card">
+      <div class="top cap"><span><b class="ch">IV</b>Rennes</span><span>Double exposition</span></div>
+      <h3>La même empreinte, sur nous</h3>
+      <p>La zone rasée de Hiroshima, posée sur le centre de Rennes sans déformation. Ici, aucune rivière ne l'interrompt : elle couvre 13 km². Le cercle de 3 km couvre plus de la moitié de la commune.</p>
+      <div class="stats"><div><b>13 km²</b><span>Rasés</span></div><div><b>28 km²</b><span>Cercle de 3 km</span></div><div><b>56 %</b><span>De la commune</span></div></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     5. HÉRITAGE
+     Texte de conclusion et citation.
+     ===================================================================== -->
+<section class="wrap" aria-label="Héritage"><div class="prose">
+  <span class="kicker cap">Héritage</span>
+  <h2>Le poids de l'Histoire</h2>
+  <p class="lead">La capitulation est signée le 2 septembre 1945. Hiroshima et Nagasaki deviennent les deux seules villes jamais frappées par une arme atomique en temps de guerre.</p>
+  <p>Les <i>hibakusha</i>, les survivants, ont témoigné pendant des décennies pour que l'on n'oublie pas. Le Japon a fait du désarmement nucléaire un pilier de son identité, et chaque 6 et 9 août, les cérémonies de Hiroshima et Nagasaki rassemblent des délégations du monde entier.</p>
+  <blockquote><p>« Maintenant, je suis devenu la Mort, le destructeur des mondes. »</p><cite>J. Robert Oppenheimer, citant la Bhagavad-Gita</cite></blockquote>
+</div></section>
+
+<!-- =====================================================================
+     6. COULISSES SIG
+     Comment les cartes sont faites : une pile de six couches qui se sépare au défilement.
+     Chaque .step porte data-l="numéro de couche" (0 = vue d'ensemble).
+     ===================================================================== -->
+<section class="lab" id="coulisses">
+  <div class="wrap"><div class="prose">
+    <span class="kicker cap"><b class="ch">V</b>Coulisses SIG</span>
+    <h2>Comment ces cartes sont faites</h2>
+    <p class="lead">Une carte, ce sont des couches empilées. Fais défiler : la carte de Hiroshima se décompose, et chaque couche dit d'où elle vient et comment elle a été traitée.</p>
+  </div></div>
+  <div class="story" id="labStory">
+    <div class="stage"><div class="stack" id="stack"></div><div class="ltags" id="ltags" aria-hidden="true"></div></div>
+    <div class="steps" id="labSteps">
+      <div class="step" data-l="0"><div class="card">
+        <div class="top cap"><span>Coulisses SIG</span><span>Vue d'ensemble</span></div>
+        <h3>Six couches, une carte</h3>
+        <p>Pas de fond de carte tout fait : chaque couche est préparée à part, puis dessinée dans le navigateur, dans la même projection.</p>
+      </div></div>
+      <div class="step" data-l="1"><div class="card">
+        <div class="top cap"><span>Couche 1</span><span>Eau</span></div>
+        <h3>Rivières et littoral</h3>
+        <p>Les rivières et plans d'eau viennent d'Overture Maps (données OpenStreetMap). La mer vient d'ESA WorldCover 2021, une image satellite classée à 10 m. Les deux sources sont fusionnées.</p>
+      </div></div>
+      <div class="step" data-l="2"><div class="card">
+        <div class="top cap"><span>Couche 2</span><span>Rues</span></div>
+        <h3>Le réseau viaire</h3>
+        <p>Plus de 30 000 tronçons de voirie à Hiroshima, tirés du thème transport d'Overture. L'épaisseur du trait dépend de la classe de la route, de l'autoroute à la ruelle.</p>
+      </div></div>
+      <div class="step" data-l="3"><div class="card">
+        <div class="top cap"><span>Couche 3</span><span>Bâti</span></div>
+        <h3>180 000 bâtiments</h3>
+        <p>Trop lourds pour un navigateur en vecteur, les contours des bâtiments sont lus directement dans les fichiers GeoParquet d'Overture, filtrés par emprise, puis rasterisés à 3 m par pixel en Python et livrés en images WebP transparentes.</p>
+      </div></div>
+      <div class="step" data-l="4"><div class="card">
+        <div class="top cap"><span>Couche 4</span><span>Zones de 1945</span></div>
+        <h3>Numérisées à la main</h3>
+        <p>Le cœur du projet. Les cartes de l'US Army Map Service (1945-1946, au 1:12 500, Stanford University Libraries) ont été géoréférencées, puis les zones rasées, endommagées et incendiées numérisées polygone par polygone.</p>
+      </div></div>
+      <div class="step" data-l="5"><div class="card">
+        <div class="top cap"><span>Couche 5</span><span>Repères</span></div>
+        <h3>Hypocentres vérifiés</h3>
+        <p>L'hypocentre de Hiroshima est celui mesuré par l'université de Hiroshima ; celui de Nagasaki, celui du monument du parc de l'Hypocentre (l'ancienne valeur était décalée de 600 m). Les cercles de 1, 2 et 3 km sont calculés en projection locale.</p>
+      </div></div>
+      <div class="step" data-l="6"><div class="card">
+        <div class="top cap"><span>Couche 6</span><span>Transposition</span></div>
+        <h3>De Hiroshima à Rennes</h3>
+        <p>La zone rasée est mesurée en UTM 53N autour de l'hypocentre, puis reposée en Lambert-93 sur le centre de Rennes, sans déformation. Les vides laissés par les rivières sont refermés par un tampon positif puis négatif de 160 m.</p>
+      </div></div>
+      <div class="step" data-l="7"><div class="card">
+        <div class="top cap"><span>Coulisses SIG</span><span>Web</span></div>
+        <h3>Une carte sans serveur</h3>
+        <p>Tout est dessiné en Canvas 2D, en Web Mercator calculé à la main, et le récit avance au défilement en JavaScript, sans bibliothèque. La première version (2025) reposait sur MapLibre GL et Scrollama.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     7. PIED DE PAGE
+     Une seule phrase, avec le lien vers le site d'origine.
+     ===================================================================== -->
+<footer class="credit">Refonte graphique du site <a href="https://chipscrevette.github.io/MAKARTO_OFC/">chipscrevette.github.io/MAKARTO_OFC</a></footer>
+
+<!-- =====================================================================
+     8. DONNÉES ET SCRIPTS
+     Les fichiers de données sont chargés d'abord, puis les scripts dans l'ordre de leur numéro.
+     ===================================================================== -->
+<!-- Données : les zones, les terres et les contours (de simples valeurs, sans logique) -->
+<script src="donnees/villes.js"></script>
+<script src="donnees/pacifique.js"></script>
+<script src="donnees/france.js"></script>
+
+<!-- Scripts : un fichier par partie, à charger dans cet ordre -->
+<script src="scripts/01-reglages.js"></script>
+<script src="scripts/02-outils-geographiques.js"></script>
+<script src="scripts/03-villes.js"></script>
+<script src="scripts/04-pacifique-donnees.js"></script>
+<script src="scripts/05-pacifique-dessin.js"></script>
+<script src="scripts/06-bilan-bombes.js"></script>
+<script src="scripts/07-scene-carte.js"></script>
+<script src="scripts/08-pacifique-camera.js"></script>
+<script src="scripts/09-recit-defilement.js"></script>
+<script src="scripts/10-coulisses-sig.js"></script>
+<script src="scripts/11-navigation-textes.js"></script>
+<script src="scripts/12-mini-carte.js"></script>
+<script src="scripts/13-lecteur-telephone.js"></script>
+<script src="scripts/14-demarrage.js"></script>
+</body>
+</html>

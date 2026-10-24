@@ -1,0 +1,529 @@
+/* =====================================================================
+   CARTE DU RÉCIT : LA SCÈNE, LES TEXTES, LA LÉGENDE ET LES BOUTONS
+   ---------------------------------------------------------------------
+   Ce fichier met en forme le cœur du site sur ordinateur. Une carte reste
+   collée à l'écran pendant que les cartes de texte (les « étapes ») défilent
+   par-dessus. On y trouve aussi la légende, la planche contact (les
+   miniatures des villes), le bouton à maintenir pour déclencher la bombe et
+   les étiquettes posées sur la carte.
+   Utilise : les variables de 01-base.css ; les éléments .story, .stage,
+   .steps, .step, .card, .legend et .strip de index.html.
+   Fournit : des classes ajoutées par les scripts : .off, .dim, .done,
+   .frame, .label (scripts/07-scene-carte.js et 09-recit-defilement.js),
+   et la variable --p (avancée du bouton maintenu, de 0 à 1).
+   ===================================================================== */
+
+/* ---------- 1. La scène et les étapes qui défilent ---------- */
+
+/* Le bloc du récit sert de repère aux éléments placés à l'intérieur. */
+.story {
+  position: relative;
+}
+
+/* La scène : un cadre de la hauteur de l'écran, « collé » en haut
+   (sticky) tant que l'on fait défiler le récit. */
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* Le canevas de la carte remplit toute la scène. */
+.stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* #flash : un voile blanc, invisible au repos. Les scripts le font
+   apparaître un instant au moment de l'explosion. */
+#flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* La colonne des étapes remonte d'une hauteur d'écran (-100svh) pour passer
+   par-dessus la scène. Elle laisse passer les clics vers la carte ; seules
+   les cartes de texte restent cliquables. */
+.steps {
+  position: relative;
+  margin-top: -100svh;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Chaque étape fait un peu plus d'un écran de haut (105 %), avec sa carte
+   de texte centrée verticalement. Cela laisse le temps de lire avant la
+   suivante. */
+.step {
+  min-height: 105svh;
+  display: flex;
+  align-items: center;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
+
+/* La toute première étape fait exactement un écran. */
+.step:first-child {
+  min-height: 100svh;
+}
+
+/* ---------- 2. Les cartes de texte ---------- */
+
+/* La carte de texte : un panneau de 410 px au plus, blanc translucide,
+   qui floute la carte derrière lui, aux coins arrondis, avec une ombre douce. */
+.card {
+  pointer-events: auto;
+  width: min(410px, 100%);
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--r);
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* L'en-tête de la carte : le chapitre à gauche, la date à droite, en gris. */
+.card .top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink-3);
+}
+
+/* Le titre de la carte, en 26 px. */
+.card h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Le très grand nombre (« 08:15 », « ≈ 140 000 »), entre 48 et 80 px.
+   tabular-nums donne la même largeur à tous les chiffres. */
+.card .big {
+  margin: 0;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: clamp(48px, 4.6vw, 80px);
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Les paragraphes de la carte, en 15,5 px et gris foncé. */
+.card p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* Une figure placée dans une carte (photo et légende) sans marge. */
+.card figure {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+/* Les photos d'archive : pleine largeur, format 16/10, recadrées sans
+   déformation, coins arrondis, en noir et blanc un peu contrasté. */
+.card img {
+  width: 100%;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+  filter: grayscale(1) contrast(1.05);
+}
+
+/* La légende de la photo, petite et grise. */
+.card figcaption {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ---------- 3. Les chiffres clés ---------- */
+
+/* Une rangée de trois cases égales (puissance, surface rasée...). */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Chaque case : fond gris très léger (noir à 5 %), coins arrondis. */
+.stats div {
+  border-radius: 16px;
+  background: rgba(17, 17, 17, 0.05);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Le chiffre de la case, en 21 px, sur une seule ligne. */
+.stats b {
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Le libellé sous le chiffre, en petites majuscules grises. */
+.stats span {
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* Variante à deux cases seulement (étape de Tinian). */
+.stats.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* .src : une mention de source, petite et grise, prioritaire sur
+   la règle .card p. */
+.src {
+  font-size: 12px !important;
+  color: var(--ink-3) !important;
+}
+
+/* ---------- 4. La légende de la scène ---------- */
+
+/* La légende : une rangée de pastilles en haut à droite, sous la barre du
+   haut (70 px plus bas). Elle apparaît et disparaît en fondu. */
+.legend {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 70px);
+  right: max(20px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  max-width: 520px;
+  z-index: 3;
+  transition: opacity 0.4s;
+}
+
+/* Chaque entrée de la légende : une pilule blanche translucide avec
+   un carré de couleur puis le libellé. */
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 7px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--glass);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+  transition: opacity 0.4s;
+}
+
+/* .sw : le petit carré de couleur (« swatch » en anglais) de 15 px.
+   Sa couleur est donnée directement dans index.html. */
+.sw {
+  width: 15px;
+  height: 15px;
+  border-radius: 5px;
+  display: inline-block;
+  flex: none;
+}
+
+/* La légende cachée (classe .off posée par les scripts quand la carte
+   affichée n'en a pas besoin). */
+.legend.off {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Les entrées des zones détruites (.z) sont pâlies (35 %) tant que la bombe
+   n'a pas été déclenchée. */
+.legend .z.dim {
+  opacity: 0.35;
+}
+
+/* Variante en trait : un simple trait rouge de 2,4 px au lieu d'un carré
+   (« Extension maximale » sur la carte du Pacifique). */
+.sw.ln {
+  background: none;
+  border-radius: 0;
+  height: 0;
+  border-top: 2.4px solid var(--red);
+}
+
+/* ---------- 5. La planche contact ---------- */
+
+/* La planche contact : une bande noire en bas à droite qui montre une
+   miniature par carte (comme une planche de photos). On clique une miniature
+   pour aller à la carte correspondante. */
+.strip {
+  position: absolute;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+  padding: 7px;
+  border-radius: 22px;
+  background: var(--night);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transition:
+    opacity 0.4s,
+    transform 0.4s;
+}
+
+/* Planche cachée : elle s'efface en descendant de 16 px. */
+.strip.off {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}
+
+/* .frame : un bouton de la planche (miniature et nom de la ville).
+   all: unset retire tout le style par défaut du bouton. */
+.frame {
+  all: unset;
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  padding: 6px 6px 8px;
+  border-radius: 16px;
+  color: var(--night-text);
+}
+
+/* La miniature : 112 x 72 px, à demi transparente au repos. */
+.stage .frame canvas {
+  position: static;
+  width: 112px;
+  height: 72px;
+  border-radius: 11px;
+  display: block;
+  background: var(--paper);
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+/* Le libellé sous la miniature, en petites majuscules. */
+.frame span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  opacity: 0.6;
+}
+
+/* La miniature de la carte affichée (aria-current="true") a un fond
+   légèrement éclairci. */
+.frame[aria-current="true"] {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* La miniature affichée, ou survolée, devient pleinement visible. */
+.frame[aria-current="true"] canvas,
+.frame:hover canvas {
+  opacity: 1;
+}
+.frame[aria-current="true"] span {
+  opacity: 1;
+}
+
+/* Contour clair autour de la miniature choisie au clavier. */
+.frame:focus-visible {
+  outline: 2px solid var(--night-text);
+  outline-offset: 2px;
+}
+
+/* ---------- 6. Le bouton déclencheur ---------- */
+
+/* Le bouton à maintenir enfoncé pour lâcher la bombe : une grosse pilule
+   noire de 60 px de haut. Le texte ne peut pas être sélectionné et le menu
+   du toucher long est désactivé, pour que l'appui prolongé fonctionne. */
+.fire {
+  all: unset;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 60px;
+  padding: 0 24px 0 9px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  white-space: nowrap;
+  justify-self: start;
+}
+
+/* Le remplissage rouge qui avance de gauche à droite pendant l'appui.
+   Sa largeur vaut --p x 100 %, où --p (de 0 à 1) est réglé par
+   scripts/09-recit-defilement.js. */
+.fire::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(var(--p, 0) * 100%);
+  background: var(--red);
+}
+
+/* L'icône dans un rond clair de 42 px, à gauche du bouton. */
+.fire .ico {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  color: var(--ink);
+  flex: none;
+  transition: transform 0.3s;
+}
+.fire .ico svg {
+  width: 23px;
+  height: 23px;
+}
+
+/* Le texte du bouton : une ligne principale et une ligne d'aide plus petite. */
+.fire .lbl {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.fire .lbl small {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+/* Au survol, l'icône tourne de 30 degrés. */
+.fire:hover .ico {
+  transform: rotate(30deg);
+}
+
+/* Contour noir autour du bouton choisi au clavier. */
+.fire:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+/* Une fois la bombe déclenchée (.done), le bouton s'inverse : fond blanc,
+   fine bordure, icône dans un rond noir. */
+.fire.done {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.fire.done .ico {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Le bouton a deux icônes : .shut (déclencher) et .rew (revenir en arrière).
+   Seule celle qui correspond à l'état du bouton est affichée. */
+.fire .rew {
+  display: none;
+}
+.fire.done .shut {
+  display: none;
+}
+.fire.done .rew {
+  display: block;
+}
+
+/* ---------- 7. Les étiquettes posées sur la carte ---------- */
+
+/* .label : une étiquette (nom de lieu) créée par scripts/07-scene-carte.js.
+   Petite pilule blanche en majuscules. Elle est placée au point voulu puis
+   décalée de 12 px vers la gauche et centrée en hauteur, pour que sa pastille
+   tombe sur le lieu. */
+.label {
+  position: absolute;
+  z-index: 2;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #111;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  transform: translate(-12px, -50%);
+  transition: opacity 0.3s;
+}
+
+/* La pastille ronde de 7 px devant le nom, de la couleur du texte. */
+.label i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+
+/* Étiquette tournée vers la gauche : le nom est à gauche du lieu,
+   la pastille à la fin. */
+.label.left {
+  transform: translate(calc(-100% + 12px), -50%);
+}
+.label.left i {
+  margin: 0 0 0 7px;
+}
+
+/* Étiquette de l'hypocentre : sans pastille, décalée de 16 px à droite
+   pour ne pas cacher le point d'impact. */
+.label.off {
+  transform: translate(16px, -50%);
+}
+
+/* Étiquette des cercles de distance (« 1 km », « 2 km »...) :
+   petite pilule noire centrée sur le cercle. */
+.label.ring {
+  transform: translate(-50%, -50%);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  background: #111;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Étiquette simple (nom de rivière ou de vallée) : texte gris sans fond,
+   centré, entouré d'un léger halo blanc pour rester lisible sur la carte. */
+.label.plain {
+  background: none;
+  box-shadow: none;
+  color: var(--ink-2);
+  transform: translate(-50%, -50%);
+  font-size: 10.5px;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 4px #fff;
+}

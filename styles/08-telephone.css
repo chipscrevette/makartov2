@@ -1,0 +1,223 @@
+/* =====================================================================
+   PETITS ÉCRANS : ADAPTATION DE LA PAGE AU TÉLÉPHONE
+   ---------------------------------------------------------------------
+   Ce fichier adapte la page défilante aux écrans de moins de 900 px de
+   large. Le menu et la planche contact disparaissent, la légende remonte
+   en haut, chaque texte devient un tiroir posé en bas de l'écran, et les
+   tailles de texte diminuent.
+   Quand le lecteur plein écran est actif (09-lecteur-telephone.css), il
+   reprend la carte et la pile des Coulisses : les règles sur la légende,
+   les étiquettes et la pile s'appliquent donc aussi dans le lecteur.
+   Utilise : les classes de 02 à 06 ; --pin, réglée par
+   scripts/11-navigation-textes.js (hauteur où chaque texte se pose).
+   Fournit : la classe body.peek (texte rangé), ajoutée par ce même script.
+   ===================================================================== */
+
+/* Tout ce fichier ne s'applique que si l'écran fait 899 px de large ou moins. */
+@media (max-width: 899px) {
+  /* ---------- 1. Barre du haut et légende ---------- */
+
+  /* Le menu des chapitres est masqué : il n'y a pas la place. */
+  .nav {
+    display: none;
+  }
+
+  /* Toutes les légendes passent en haut à gauche, sous l'en-tête :
+     le texte posé en bas de l'écran ne les cache jamais. */
+  .legend,
+  .legend.pac {
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    bottom: auto;
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: auto;
+    justify-content: flex-start;
+    max-width: calc(100% - 24px);
+    gap: 4px;
+  }
+
+  /* Des pastilles de légende plus petites. */
+  .legend span {
+    font-size: 10.5px;
+    padding: 3px 8px 3px 4px;
+    gap: 6px;
+  }
+  .legend .sw {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  /* Le trait de la légende garde une hauteur nulle (seule sa bordure se voit). */
+  .legend .sw.ln {
+    height: 0;
+  }
+
+  /* Les entrées secondaires de la légende (.opt) sont masquées. */
+  .legend .opt {
+    display: none;
+  }
+
+  /* La planche contact est masquée. */
+  .strip {
+    display: none;
+  }
+
+  /* ---------- 2. Les textes posés en bas de l'écran ---------- */
+
+  /* Chaque texte se pose en bas de l'écran et y reste jusqu'à ce que le
+     suivant vienne le pousser. La carte de texte est « collée » (sticky)
+     à la hauteur --pin, calculée par le script pour que son bas tombe
+     juste au-dessus du bas de l'écran. */
+  .step {
+    align-items: flex-start;
+    padding-top: 20px;
+    padding-bottom: 0;
+  }
+  .step .card {
+    position: sticky;
+    top: var(--pin, auto);
+  }
+
+  /* Le texte devient un tiroir : une poignée en haut, et un toucher le range
+     pour dégager toute la carte. D'abord, des marges latérales réduites. */
+  .step {
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
+
+  /* Le tiroir glisse en 0,45 seconde, avec un départ rapide et une arrivée
+     douce (courbe cubic-bezier). Le flash gris du toucher est retiré. */
+  .step .card {
+    padding-top: 26px;
+    border-radius: 26px;
+    translate: 0 0;
+    transition: translate 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* La poignée : un petit trait gris de 36 x 4 px centré en haut du tiroir. */
+  .step .card::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 4px;
+    background: rgba(17, 17, 17, 0.2);
+  }
+
+  /* Dans les Coulisses (fond sombre), la poignée est claire. */
+  .lab .step .card::before {
+    background: rgba(244, 244, 241, 0.28);
+  }
+
+  /* Tiroir rangé (body.peek) : le texte descend et ne laisse dépasser
+     que ses 40 px du haut. */
+  body.peek .step .card {
+    translate: 0 calc(100% - 40px);
+  }
+
+  /* Au doigt, un glissement s'arrête toujours sur l'étape suivante, sans
+     pouvoir en sauter une : chaque étape fait un écran de haut, et le
+     défilement s'aimante sur son centre. */
+  html {
+    scroll-snap-type: y proximity;
+  }
+  .step,
+  .step:first-child {
+    min-height: 100svh;
+    height: 100svh;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  /* Le contenu des cartes est prévenu qu'il bougera souvent (animations). */
+  .step .card > * {
+    will-change: transform;
+  }
+
+  /* ---------- 3. Tailles réduites des cartes de texte ---------- */
+
+  /* Moins d'espace entre les lignes de la carte. */
+  .card {
+    gap: 10px;
+  }
+
+  /* Paragraphes en 15 px, titre en 23 px. */
+  .card p {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .card h3 {
+    font-size: 23px;
+  }
+
+  /* Les légendes des photos sont masquées. */
+  .card figcaption {
+    display: none;
+  }
+
+  /* La carte de texte prend toute la largeur. */
+  .card {
+    width: 100%;
+    padding: 18px;
+  }
+
+  /* Le très grand nombre passe à 56 px. */
+  .card .big {
+    font-size: 56px;
+  }
+
+  /* Les photos deviennent plus allongées (16/7) pour prendre moins de hauteur. */
+  .card img {
+    aspect-ratio: 16/7;
+  }
+
+  /* Les chiffres clés en 17 px. */
+  .stats b {
+    font-size: 17px;
+  }
+
+  /* ---------- 4. Étiquettes de la carte et pile des Coulisses ---------- */
+
+  /* Des étiquettes de lieux plus petites. */
+  .label {
+    font-size: 9.5px;
+    padding: 4px 8px;
+  }
+
+  /* La pile de calques : 62 % de la largeur d'écran (420 px au plus),
+     centrée et remontée de 14 % de la hauteur d'écran pour laisser
+     la place au texte en bas. */
+  .stack {
+    width: min(62vw, 420px);
+    transform: translateY(-14svh) rotateX(var(--rx, 0deg))
+      rotateZ(var(--rz, 0deg));
+  }
+
+  /* Des étiquettes de calques plus compactes. */
+  .ltag::before {
+    width: 14px;
+  }
+  .ltag span {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  /* ---------- 5. Voile de l'ouverture ---------- */
+
+  /* Le voile clair de l'ouverture part du bas (0deg) au lieu de la gauche :
+     plein jusqu'à 38 % de la hauteur, il laisse la carte visible en haut
+     et le titre lisible en bas. */
+  .hero::after {
+    background: linear-gradient(
+      0deg,
+      var(--paper) 38%,
+      rgba(244, 244, 241, 0.55) 70%,
+      rgba(244, 244, 241, 0.15)
+    );
+  }
+}
